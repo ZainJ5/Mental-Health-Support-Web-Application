@@ -21,6 +21,18 @@ const nextConfig = {
     }
     return config;
   },
+
+  async headers() {
+    return [
+      {
+        source: "/(.*)", // Applies to all pages
+        headers: [
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
