@@ -18,14 +18,30 @@ const MONGO_URI = process.env.MONGO_URI as string;
 
 export async function POST(req: NextRequest) {
     try {
+        const userEmail = req.cookies.get('userEmail')?.value;
+        console.log('User Email from cookie:', userEmail);
+
+        if (!userEmail) {
+            return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+        }
+
         const body = await req.json();
-        const { query, conversationId } = body;
+        const { query } = body;
 
         if (!query) {
             return NextResponse.json({ error: "Please provide a query in the request body" }, { status: 400 });
         }
 
         await connectDB();
+
+        let conversationId;
+        const existingMessage = await Message.findOne({ userEmail }).sort({ createdAt: -1 });
+        
+        if (existingMessage) {
+            conversationId = existingMessage.conversationId;
+        } else {
+            conversationId = new mongoose.Types.ObjectId().toString();
+        }
 
         const llmResponse = await openai.chat.completions.create({
             model: "gpt-4o-mini",
@@ -37,22 +53,23 @@ export async function POST(req: NextRequest) {
 
         const aiResponse = llmResponse.choices[0].message.content;
 
-        const newConversationId = conversationId || new mongoose.Types.ObjectId().toString();
-
         const message = new Message({
-            conversationId: newConversationId,
+            conversationId,
+            userEmail, 
             userMessage: query,
             aiMessage: aiResponse,
+            createdAt: new Date()
         });
 
         await message.save(); 
 
         return NextResponse.json({
-            conversationId: newConversationId,
+            conversationId,
             query,
             response: aiResponse,
         });
     } catch (error: any) {
+        console.error('Error in chat API:', error);
         return NextResponse.json({ error: `An error occurred: ${error.message}` }, { status: 500 });
     }
 }

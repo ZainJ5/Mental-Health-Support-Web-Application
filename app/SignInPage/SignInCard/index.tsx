@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Brain, Activity, Heart, Lock } from 'lucide-react';
 import GoogleButton from '../../SignUpPage/SignupCard/GoogleButton';
 import { toast } from 'sonner';
+import Cookies from 'js-cookie';
 
 interface UserData {
   displayName: string | null;
@@ -25,6 +26,14 @@ const SignInCard: React.FC = () => {
     email: '',
     password: ''
   });
+
+  const setUniversalCookie = (email: string) => {
+    Cookies.set('userEmail', email, {
+      secure: false, 
+      sameSite: 'lax', 
+      path: '/',
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -55,6 +64,8 @@ const SignInCard: React.FC = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Sign in failed');
       }
+
+      setUniversalCookie(formData.email);
 
       toast.success('Sign in successful!');
       router.push('/');
@@ -91,6 +102,10 @@ const SignInCard: React.FC = () => {
         throw new Error(data.message || 'Google sign in failed');
       }
 
+      if (userData.email) {
+        setUniversalCookie(userData.email);
+      }
+
       toast.success('Google sign in successful!');
       router.push('/');
     } catch (error) {
@@ -103,6 +118,7 @@ const SignInCard: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">

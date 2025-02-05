@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Brain, Activity, Heart, Lock } from 'lucide-react';
 import GoogleButton from './GoogleButton';
 import { toast } from 'sonner';
+import Cookies from 'js-cookie';
 
 interface UserData {
   displayName: string | null;
@@ -29,6 +30,14 @@ const SignUpCard: React.FC = () => {
     email: '',
     password: ''
   });
+
+  const setUniversalCookie = (email: string) => {
+    Cookies.set('userEmail', email, {
+      secure: false, 
+      sameSite: 'lax', 
+      path: '/'
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -61,6 +70,8 @@ const SignUpCard: React.FC = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Something went wrong');
       }
+
+      setUniversalCookie(formData.email);
 
       toast.success('Account created successfully!');
       router.push('/');
@@ -95,6 +106,10 @@ const SignUpCard: React.FC = () => {
 
       if (!response.ok) {
         throw new Error(data.message || 'Something went wrong');
+      }
+
+      if (userData.email) {
+        setUniversalCookie(userData.email);
       }
 
       toast.success('Google sign-in successful!');

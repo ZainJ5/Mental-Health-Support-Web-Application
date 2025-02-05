@@ -2,46 +2,164 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Loader2 } from 'lucide-react';
+import Cookies from 'js-cookie';
 
-const ChatBot = () => {
-  const [messages, setMessages] = useState([
+// Function to parse message text with bold and newlines
+const parseAIMessage = (text: string): React.ReactNode[] => {
+  // Split the text by newlines first
+  const lines = text.split('\n');
+  
+  return lines.map((line, lineIndex) => {
+    // Skip empty lines but preserve the spacing
+    if (!line.trim()) {
+      return <br key={`br-${lineIndex}`} />;
+    }
+
+    // Process bold text within each line
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    const parsedLine = parts.map((part, partIndex) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Remove ** and make text bold
+        return <strong key={`bold-${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+
+    // Return the line with proper spacing
+    return (
+      <React.Fragment key={`line-${lineIndex}`}>
+        {parsedLine}
+        {lineIndex < lines.length - 1 && <br />}
+      </React.Fragment>
+    );
+  });
+};
+
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: string;
+}
+
+interface BackendMessage {
+  _id: string;
+  conversationId: string;
+  userEmail: string;
+  userMessage: string;
+  aiMessage: string;
+  createdAt: string;
+}
+
+const ChatBot: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
+      id: 'welcome',
       text: 'Welcome to MentalHealthBot, a safe and supportive space where you can share your thoughts and feelings without fear of judgement. How can I help you today?',
       sender: 'bot',
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: 'Just now',
     },
   ]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [newMessage, setNewMessage] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const formatTimestamp = (date: string | number): string => {
+    const messageDate = new Date(date);
+    const now = new Date();
+    
+    if (messageDate.toDateString() === now.toDateString()) {
+      return messageDate.toLocaleTimeString([], { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    }
+    return messageDate.toLocaleDateString([], { 
+      month: 'short', 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   };
+
+  const fetchUserMessages = async (): Promise<void> => {
+    const userEmail = Cookies.get('userEmail');
+    if (!userEmail) {
+      console.error('User email not found in cookies.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/conversation/${encodeURIComponent(userEmail)}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Failed to fetch messages');
+
+      if (!Array.isArray(data.messages)) {
+        throw new Error('Invalid data format: messages is not an array');
+      }
+
+      const formattedMessages: Message[] = data.messages.flatMap((msg: BackendMessage) => {
+        const timestamp = formatTimestamp(msg.createdAt);
+        return [
+          {
+            id: `${msg._id}-user`,
+            text: msg.userMessage,
+            sender: 'user',
+            timestamp: timestamp
+          },
+          {
+            id: `${msg._id}-bot`,
+            text: msg.aiMessage,
+            sender: 'bot',
+            timestamp: timestamp
+          }
+        ];
+      });
+
+      setMessages(prevMessages => [
+        prevMessages[0],
+        ...formattedMessages
+      ]);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const scrollToBottom = (): void => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    fetchUserMessages();
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const parseMessage = (message: string) => {
-    return message
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
-      .replace(/\n/g, '<br />') 
-      .replace(/^\d+\.\s*(.*)$/gm, '<li>$1</li>'); 
-  };
-
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (): Promise<void> => {
     if (!newMessage.trim() || loading) return;
 
-    const userMessage = {
-      id: messages.length + 1,
+    const userEmail = Cookies.get('userEmail');
+    if (!userEmail) {
+      console.error('User email not found in cookies.');
+      return;
+    }
+
+    const timestamp = formatTimestamp(Date.now());
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
       text: newMessage,
       sender: 'user',
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: timestamp,
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setNewMessage('');
     setLoading(true);
 
@@ -49,39 +167,42 @@ const ChatBot = () => {
       const response = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: newMessage }),
+        body: JSON.stringify({ 
+          query: newMessage,
+          userEmail: userEmail
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || 'Failed to fetch response');
 
-      const botMessage = {
-        id: messages.length + 2,
+      const botMessage: Message = {
+        id: `bot-${Date.now()}`,
         text: data.response,
         sender: 'bot',
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: timestamp,
       };
 
-      setMessages((prevMessages) => [...prevMessages, botMessage]);
+      setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error fetching response:', error);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: messages.length + 2,
-          text: 'I apologize, but I seem to be having trouble connecting. Could you please try again?',
-          sender: 'bot',
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      ]);
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        text: 'I apologize, but I seem to be having trouble connecting. Could you please try again?',
+        sender: 'bot',
+        timestamp: timestamp,
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') handleSendMessage();
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
   };
 
   return (
@@ -113,10 +234,9 @@ const ChatBot = () => {
                     message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
                   }`}
                 >
-                  <p
-                    className="text-sm md:text-base leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: parseMessage(message.text) }}
-                  ></p>
+                  <div className="text-sm md:text-base leading-relaxed">
+                    {message.sender === 'bot' ? parseAIMessage(message.text) : message.text}
+                  </div>
                   <span
                     className={`absolute bottom-1 right-3 text-xs ${
                       message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
@@ -135,13 +255,12 @@ const ChatBot = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
           <div className="border-t p-4">
             <div className="flex items-center max-w-4xl mx-auto">
               <input
                 type="text"
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message here..."
                 className="flex-1 p-4 border border-gray-200 rounded-l-xl focus:outline-none focus:border-blue-500 transition-colors"
