@@ -1,6 +1,9 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Send, User, Mail, MessageSquare, Type } from 'lucide-react';
+import { toast, Toaster } from 'sonner';
+import Cookies from 'js-cookie';
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -10,101 +13,190 @@ const ContactUs = () => {
     message: ''
   });
 
-  const handleChange = (event: any) => {
+  const [focused, setFocused] = useState<string>('');
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    const savedSettings = Cookies.get('user-settings');
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        setDarkMode(settings.darkMode);
+      } catch (e) {
+        console.error('Error parsing settings from cookie:', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (event: any) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    // Here you would handle the submission logic, perhaps sending data to a server
-    alert('Form submitted! Check console for details.');
+    
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    toast.success('Message sent successfully!');
+    setFormData({
+      name: '',
+      email: '',
+      subject: '',
+      message: ''
+    });
+
     console.log(formData);
   };
 
+  const handleFocus = (field: string) => {
+    setFocused(field);
+  };
+
+  const handleBlur = () => {
+    setFocused('');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center ">
-      <form
-        onSubmit={handleSubmit}
-        className="p-8  -mt-24 bg-gradient-to-r from-blue-200 to-blue-100 rounded-lg shadow-lg max-w-lg w-full"
-      >
-        <h1 className="text-2xl font-bold text-center mb-6">Contact Us</h1>
-        <div className="mb-4">
-          <label
-            htmlFor="name"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="Your Name"
+    <div className={`flex h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="flex-1 flex flex-col ${darkMode ? 'bg-gray-800' : 'bg-white'}">
+        <header className={`h-16 border-b ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} flex items-center justify-between px-6`}>
+          <h1 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Contact Support</h1>
+        </header>
+
+        <main className="flex-1 overflow-auto p-6">
+          <Toaster 
+            position="top-center" 
+            richColors 
+            expand={true}
+            closeButton={true}
           />
-        </div>
-        <div className="mb-4">
-          <label
-            htmlFor="email"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="Your Email"
-          />
-        </div>
-        <div className="mb-4">
-          <label
-            htmlFor="subject"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Subject
-          </label>
-          <input
-            type="text"
-            id="subject"
-            name="subject"
-            value={formData.subject}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="Subject"
-          />
-        </div>
-        <div className="mb-6">
-          <label
-            htmlFor="message"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Message
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            value={formData.message}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="Your Message"
-          />
-        </div>
-        <div className="flex items-center justify-center">
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Send
-          </button>
-        </div>
-      </form>
+          
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-8">
+              <h2 className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>Send us a Message</h2>
+              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>We'll get back to you as soon as possible.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="relative">
+                  <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200 
+                    ${focused === 'name' || formData.name ? 'text-blue-600' : darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+                    <User size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus('name')}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700'} rounded-lg border transition-all duration-200
+                      focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                      ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}
+                    placeholder="Your Name"
+                    required
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200
+                    ${focused === 'email' || formData.email ? 'text-blue-600' : darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+                    <Mail size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus('email')}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700'} rounded-lg border transition-all duration-200
+                      focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                      ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}
+                    placeholder="Your Email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200
+                  ${focused === 'subject' || formData.subject ? 'text-blue-600' : darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+                  <Type size={18} />
+                </div>
+                <input
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus('subject')}
+                  onBlur={handleBlur}
+                  className={`w-full pl-10 pr-4 py-3 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700'} rounded-lg border transition-all duration-200
+                    focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                    ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}
+                  placeholder="Subject"
+                  required
+                />
+              </div>
+
+              <div className="relative">
+                <div className={`absolute left-3 top-4 transition-colors duration-200
+                  ${focused === 'message' || formData.message ? 'text-blue-600' : darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+                  <MessageSquare size={18} />
+                </div>
+                <textarea
+                  id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus('message')}
+                  onBlur={handleBlur}
+                  rows={4}
+                  className={`w-full pl-10 pr-4 py-3 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700'} rounded-lg border transition-all duration-200
+                    focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                    ${darkMode ? 'border-gray-600' : 'border-gray-200'} resize-none`}
+                  placeholder="Your Message"
+                  required
+                />
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg
+                    transition-all duration-200 transform 
+                    focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
+                    flex items-center justify-center gap-2"
+                >
+                  <Send size={18} />
+                  Send Message
+                </button>
+              </div>
+            </form>
+
+            <div className={`flex items-center justify-center gap-2 mt-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'} text-sm`}>
+              <MessageSquare size={16} />
+              <span>Average response time: 24-48 hours</span>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

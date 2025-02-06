@@ -4,28 +4,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Loader2 } from 'lucide-react';
 import Cookies from 'js-cookie';
 
-// Function to parse message text with bold and newlines
 const parseAIMessage = (text: string): React.ReactNode[] => {
-  // Split the text by newlines first
   const lines = text.split('\n');
   
   return lines.map((line, lineIndex) => {
-    // Skip empty lines but preserve the spacing
     if (!line.trim()) {
       return <br key={`br-${lineIndex}`} />;
     }
 
-    // Process bold text within each line
     const parts = line.split(/(\*\*[^*]+\*\*)/g);
     const parsedLine = parts.map((part, partIndex) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        // Remove ** and make text bold
         return <strong key={`bold-${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>;
       }
       return part;
     });
 
-    // Return the line with proper spacing
     return (
       <React.Fragment key={`line-${lineIndex}`}>
         {parsedLine}
@@ -62,7 +56,30 @@ const ChatBot: React.FC = () => {
   ]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Retrieve dark mode preference from cookies
+    const savedSettings = Cookies.get('user-settings');
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        setDarkMode(settings.darkMode);
+      } catch (e) {
+        console.error('Error parsing settings from cookie:', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Apply dark mode to the document
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const formatTimestamp = (date: string | number): string => {
     const messageDate = new Date(date);
@@ -206,18 +223,18 @@ const ChatBot: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <div className="bg-white shadow-md px-6 py-4">
+    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-purple-50'}`}>
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md px-6 py-4`}>
         <div className="flex items-center max-w-7xl mx-auto">
-          <div className="bg-blue-500 p-2 rounded-full">
+          <div className={`${darkMode ? 'bg-blue-600' : 'bg-blue-500'} p-2 rounded-full`}>
             <MessageCircle className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-semibold ml-3 text-gray-800">Mental Health Support</h1>
+          <h1 className={`text-xl font-semibold ml-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Mental Health Support</h1>
         </div>
       </div>
 
       <div className="flex-1 overflow-hidden px-4 py-6 max-w-7xl mx-auto w-full">
-        <div className="bg-white rounded-2xl shadow-lg h-full flex flex-col">
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-lg h-full flex flex-col`}>
           <div className="flex-1 overflow-y-auto p-6">
             {messages.map((message) => (
               <div
@@ -225,29 +242,41 @@ const ChatBot: React.FC = () => {
                 className={`flex mb-6 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.sender === 'bot' && (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold mr-3">
+                  <div className={`w-10 h-10 rounded-full ${darkMode ? 'bg-gradient-to-r from-blue-600 to-blue-800' : 'bg-gradient-to-r from-blue-400 to-blue-600'} flex items-center justify-center text-white font-semibold mr-3`}>
                     AI
                   </div>
                 )}
                 <div
                   className={`relative max-w-[80%] rounded-2xl px-6 py-4 ${
-                    message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
+                    message.sender === 'user' 
+                      ? darkMode 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-blue-500 text-white'
+                      : darkMode 
+                        ? 'bg-gray-700 text-gray-100' 
+                        : 'bg-gray-100 text-gray-800'
                   }`}
                 >
                   <div className="text-sm md:text-base leading-relaxed">
                     {message.sender === 'bot' ? parseAIMessage(message.text) : message.text}
                   </div>
                   <span
-                    className={`absolute bottom-1 right-3 text-xs ${
-                      message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                    className={`absolute bottom-2 right-3 text-xs ${
+                      message.sender === 'user' 
+                        ? darkMode 
+                          ? 'text-blue-200' 
+                          : 'text-blue-100'
+                        : darkMode 
+                          ? 'text-gray-400' 
+                          : 'text-gray-500'
                     }`}
                   >
                     {message.timestamp}
                   </span>
                 </div>
                 {message.sender === 'user' && (
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center ml-3">
-                    <span className="text-gray-600 font-semibold">You</span>
+                  <div className={`w-10 h-10 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center ml-3`}>
+                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} font-semibold`}>You</span>
                   </div>
                 )}
               </div>
@@ -255,7 +284,7 @@ const ChatBot: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t p-4">
+          <div className={`border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} p-4`}>
             <div className="flex items-center max-w-4xl mx-auto">
               <input
                 type="text"
@@ -263,13 +292,13 @@ const ChatBot: React.FC = () => {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message here..."
-                className="flex-1 p-4 border border-gray-200 rounded-l-xl focus:outline-none focus:border-blue-500 transition-colors"
+                className={`flex-1 p-4 ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-200'} border rounded-l-xl focus:outline-none focus:border-blue-500 transition-colors`}
                 disabled={loading}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={loading}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-4 rounded-r-xl transition-colors flex items-center justify-center min-w-[100px]"
+                className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white px-6 py-4 rounded-r-xl transition-colors flex items-center justify-center min-w-[100px]`}
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
