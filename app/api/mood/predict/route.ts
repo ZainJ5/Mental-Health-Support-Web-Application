@@ -20,19 +20,19 @@ Additional notes: ${description}
 
 Please provide an analysis or prediction based on this mood data.`;
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      throw new Error("OPENROUTER_API_KEY is not set in environment variables");
+      throw new Error("OPENAI_API_KEY is not set in environment variables");
     }
 
-    const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "deepseek/deepseek-r1-distill-llama-70b:free",
+        model: "gpt-3.5-turbo",
         messages: [
           {
             role: "user",
