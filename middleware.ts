@@ -1,12 +1,19 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server";
 
-import type { NextRequest } from 'next/server'
-//import type { Database } from '@/types_db'
+export function middleware(req: NextRequest) {
+  const token = req.cookies.get("userEmail"); 
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  // const supabase = createMiddlewareClient<Database>({ req, res })
-  // await supabase.auth.getSession()
-  return res
+  if (req.nextUrl.pathname === "/SignInPage" || req.nextUrl.pathname === "/SignUpPage") {
+    return NextResponse.next();
+  }
+
+  if (!token) {
+    return NextResponse.redirect(new URL("/SignInPage", req.url));
+  }
+
+  return NextResponse.next(); 
 }
+
+export const config = {
+  matcher: "/((?!api|_next|static|favicon.ico).*)",
+};
