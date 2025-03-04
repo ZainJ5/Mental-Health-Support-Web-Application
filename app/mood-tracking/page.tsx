@@ -138,24 +138,50 @@ const MoodTracking = () => {
       toast.error('Please fill in all required fields: Description and Date.');
       return;
     }
-
+  
     if (isLoading) return;
     setIsLoading(true);
-
+  
     try {
+      const userEmail = Cookies.get('userEmail');
+      
+      if (!userEmail) {
+        toast.error('User not logged in. Please log in to track your mood.');
+        setIsLoading(false);
+        return;
+      }
+      
+      const userResponse = await fetch(`/api/auth/user/getByEmail?email=${encodeURIComponent(userEmail)}`);
+      
+      if (!userResponse.ok) {
+        throw new Error("Failed to get user information");
+      }
+      
+      const userData = await userResponse.json();
+      const userId = userData._id; 
+      
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+      
+      const payload = { 
+        ...moodData, 
+        userId 
+      };
+  
       const res = await fetch('/api/mood/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(moodData)
+        body: JSON.stringify(payload)
       });
-
+  
       if (!res.ok) {
         throw new Error("Failed to get prediction");
       }
-
-      const data: AIResponse = await res.json();
+  
+      const data = await res.json();
       setPopupContent(data.prediction);
       setPopupVisible(true);
     } catch (error) {

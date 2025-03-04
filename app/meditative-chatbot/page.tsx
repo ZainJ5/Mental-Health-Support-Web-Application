@@ -60,7 +60,6 @@ const ChatBot: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Retrieve dark mode preference from cookies
     const savedSettings = Cookies.get('user-settings');
     if (savedSettings) {
       try {
@@ -73,7 +72,6 @@ const ChatBot: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Apply dark mode to the document
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {

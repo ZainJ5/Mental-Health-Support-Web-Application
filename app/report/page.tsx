@@ -18,13 +18,13 @@ interface MoodData {
 
 const Report: React.FC = () => {
   const [moodData, setMoodData] = useState<MoodData>({
-    name: 'John Doe',
-    stress: 50,
-    happiness: 75,
-    energy: 40,
-    focus: 60,
-    calmness: 80,
-    description: 'Patient is feeling good but reports being a bit stressed.',
+    name: '',
+    stress: 0,
+    happiness: 5,
+    energy: 0,
+    focus: 0,
+    calmness: 0,
+    description: '',
     date: new Date().toLocaleDateString(),
     doctor: 'Dr. Jane Smith'
   });
@@ -50,6 +50,80 @@ const Report: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const userEmail = Cookies.get('userEmail');
+      if (!userEmail) {
+        console.error('User email cookie not found');
+        return;
+      }
+      try {
+        const userResponse = await fetch(`/api/auth/user/getByEmail?email=${userEmail}`);
+        const userData = await userResponse.json();
+
+        const moodResponse = await fetch('/api/moodlogs');
+        const moodResult = await moodResponse.json();
+
+        if (userData && moodResult.success && Array.isArray(moodResult.data)) {
+          const oneMonthAgo = new Date();
+          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+          const recentMoodLogs = moodResult.data.filter((log: any) => {
+            const logDate = new Date(log.createdAt);
+            return logDate >= oneMonthAgo;
+          });
+
+          const count = recentMoodLogs.length;
+          if (count > 0) {
+            const total = recentMoodLogs.reduce(
+              (acc: any, log: any) => ({
+                stress: acc.stress + (log.stress || 0),
+                happiness: acc.happiness + (log.happiness || 0),
+                energy: acc.energy + (log.energy || 0),
+                focus: acc.focus + (log.focus || 0),
+                calmness: acc.calmness + (log.calmness || 0)
+              }),
+              { stress: 0, happiness: 0, energy: 0, focus: 0, calmness: 0 }
+            );
+
+            const avgStress = Math.round(total.stress / count);
+            const avgHappiness = Math.round(total.happiness / count);
+            const avgEnergy = Math.round(total.energy / count);
+            const avgFocus = Math.round(total.focus / count);
+            const avgCalmness = Math.round(total.calmness / count);
+
+            setMoodData({
+              name: userData.displayName || 'No Name',
+              stress: avgStress,
+              happiness: avgHappiness,
+              energy: avgEnergy,
+              focus: avgFocus,
+              calmness: avgCalmness,
+              description: recentMoodLogs[0]?.description || 'No description available',
+              date: new Date().toLocaleDateString(),
+              doctor: recentMoodLogs[0]?.doctor || 'No doctor info'
+            });
+          } else {
+            setMoodData({
+              name: userData.displayName || 'No Name',
+              stress: 0,
+              happiness: 0,
+              energy: 0,
+              focus: 0,
+              calmness: 0,
+              description: 'No mood logs in the past month.',
+              date: new Date().toLocaleDateString(),
+              doctor: 'N/A'
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const renderProgressBar = (value: number, color: string): JSX.Element => (
     <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-2`}>

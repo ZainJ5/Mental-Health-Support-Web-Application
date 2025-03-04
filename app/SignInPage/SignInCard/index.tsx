@@ -124,7 +124,6 @@ const SignInCard: React.FC = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="flex flex-col md:flex-row">
-          {/* Left Panel - Features */}
           <div className="md:w-5/12 bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-white">
             <div className="h-full flex flex-col justify-center">
               <div className="mb-8 flex items-center">
@@ -149,7 +148,6 @@ const SignInCard: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Panel - Sign In Form */}
           <div className="md:w-7/12 p-8">
             <div className="max-w-md mx-auto">
               <div className="text-center mb-6">
