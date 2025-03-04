@@ -34,7 +34,6 @@ Please provide an analysis or prediction based on this mood data.`;
       throw new Error("OPENAI_API_KEY is not set in environment variables");
     }
 
-    console.log("Sending request to OpenAI with message:", userMessage);
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
