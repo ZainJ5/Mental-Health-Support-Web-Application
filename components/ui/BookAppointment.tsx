@@ -16,14 +16,16 @@ interface ScheduleSlot {
   endTime: string;
 }
 
+interface ScheduleItem {
+  day: string;
+  slots: ScheduleSlot[];
+  _id: string;
+}
+
 interface DoctorScheduleType {
   _id: string;
   doctorId: string;
-  schedule: {
-    day: string;
-    slots: ScheduleSlot[];
-    _id: string;
-  }[];
+  schedule: ScheduleItem[];
   unavailableDates: string[];
   createdAt: string;
   updatedAt: string;
@@ -146,8 +148,8 @@ const BookAppointment: React.FC<BookAppointmentProps> = ({
 
         if (scheduleData.schedule) {
           const today = new Date();
-          // Access the nested schedule array correctly
-          const availableDays = scheduleData.schedule.schedule.map((s: any) => s.day);
+          // Access the nested schedule array correctly with explicit type annotation
+          const availableDays = scheduleData.schedule.schedule.map((s: ScheduleItem) => s.day);
           const unavailableDatesSet = new Set(scheduleData.schedule.unavailableDates);
 
           const dates: Date[] = [];
@@ -176,8 +178,8 @@ const BookAppointment: React.FC<BookAppointmentProps> = ({
   useEffect(() => {
     if (selectedDate && doctorSchedule) {
       const dayName = getDayName(selectedDate);
-      // Access the nested schedule array to find the day schedule
-      const daySchedule = doctorSchedule.schedule.find(s => s.day === dayName);
+      // Access the nested schedule array with explicit type annotation
+      const daySchedule = doctorSchedule.schedule.find((s: ScheduleItem) => s.day === dayName);
 
       if (daySchedule) {
         const dateString = format(selectedDate, 'yyyy-MM-dd');
