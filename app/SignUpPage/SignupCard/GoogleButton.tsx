@@ -1,7 +1,7 @@
 "use client"
 import React from 'react';
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from './firebaseConfig';
+import { auth } from '../../firebase';
 
 interface UserData {
   displayName: string | null;
