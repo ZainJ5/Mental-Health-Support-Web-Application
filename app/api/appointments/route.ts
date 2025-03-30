@@ -67,15 +67,7 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
-    
-    const daySchedule = doctorSchedule.schedule.find(s => s.day === dayOfWeek);
-    if (!daySchedule) {
-      return NextResponse.json(
-        { error: 'Doctor is not available on this day' },
-        { status: 400 }
-      );
-    }
-    
+        
     const isValidTimeSlot = daySchedule.slots.some((slot: ScheduleSlot) => 
       slot.startTime <= startTime && slot.endTime >= endTime
     );
