@@ -4,6 +4,15 @@ import connectDB from '../../../lib/mongoose';
 import Appointment from '../../models/Appointment';
 import DoctorSchedule from '../../models/DoctorSchedule';
 
+// Define a type for a schedule item
+interface ScheduleItem {
+  day: string;
+  slots: {
+    startTime: string;
+    endTime: string;
+  }[];
+}
+
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
@@ -59,8 +68,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find the schedule for the computed day.
-    const daySchedule = doctorSchedule.schedule.find(s => s.day === dayOfWeek);
+    // Find the schedule for the computed day with an explicit type for 's'
+    const daySchedule = doctorSchedule.schedule.find((s: ScheduleItem) => s.day === dayOfWeek);
     if (!daySchedule) {
       return NextResponse.json(
         { error: 'Doctor is not available on this day' },
@@ -75,8 +84,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Optionally, you could add additional checks to see if the requested time falls within one of the slots.
 
     const newAppointment = new Appointment({
       doctorId,
