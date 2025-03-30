@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    domains: ['ui-avatars.com'],
+  },
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.module.rules.push({

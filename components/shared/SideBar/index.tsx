@@ -15,6 +15,7 @@ import {
   X,
   MessageCircle,
   LogOut,
+  UserPlus,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -41,6 +42,12 @@ const menuItems: MenuItem[] = [
     title: 'Meditative Chatbot',
     icon: <MessageCircle className="w-5 h-5" />,
     link: '/meditative-chatbot',
+    group: 'main',
+  },
+  {
+    title: 'Talk to Doctor',
+    icon: <UserPlus className="w-5 h-5" />,
+    link: '/doctor-chat',
     group: 'main',
   },
   {
