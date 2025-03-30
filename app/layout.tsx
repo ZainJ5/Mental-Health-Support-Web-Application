@@ -14,7 +14,14 @@ const RootLayout: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
+  // Routes where authentication UI should be shown without sidebar
   const authRoutes = ['/SignInPage', '/SignUpPage'];
+  
+  // Doctor-related routes where sidebar should be hidden
+  const doctorRoutes = ['/doctor-login', '/doctor-dashboard'];
+  
+  // Check if current path is a route where sidebar should be hidden
+  const shouldHideSidebar = authRoutes.includes(pathname) || doctorRoutes.includes(pathname);
 
   useEffect(() => {
     const savedSettings = Cookies.get('user-settings');
@@ -60,7 +67,7 @@ const RootLayout: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     <html lang="en" className="h-full">
       <body className="h-full">
         <main className="w-full flex h-full">
-          {!authRoutes.includes(pathname) && (
+          {!shouldHideSidebar && (
             <>
               <div className="sm:hidden">
                 <SideBar
@@ -82,7 +89,7 @@ const RootLayout: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           )}
 
           <div className="flex flex-col w-full h-full overflow-hidden">
-            {!authRoutes.includes(pathname) && (
+            {!shouldHideSidebar && (
               <header
                 className={`sm:hidden flex items-center justify-between p-4 ${
                   darkMode ? 'bg-gray-900' : 'bg-white'
@@ -103,7 +110,7 @@ const RootLayout: React.FC<PropsWithChildren<{}>> = ({ children }) => {
             )}
 
             <div
-              className={`flex-1 overflow-y-auto sm:p-0 p-2 ${
+              className={`flex-1 overflow-y-auto ${!shouldHideSidebar ? 'sm:p-0 p-2' : 'p-0'} ${
                 darkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800'
               }`}
             >
