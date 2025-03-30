@@ -11,16 +11,27 @@ interface BookAppointmentProps {
   darkMode: boolean;
 }
 
-interface DoctorSchedule {
+interface ScheduleSlot {
+  startTime: string;
+  endTime: string;
+}
+
+interface DoctorScheduleType {
+  _id: string;
   doctorId: string;
   schedule: {
     day: string;
-    slots: {
-      startTime: string;
-      endTime: string;
-    }[];
+    slots: ScheduleSlot[];
+    _id: string;
   }[];
   unavailableDates: string[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface DoctorScheduleResponse {
+  schedule: DoctorScheduleType;
 }
 
 const TIME_SLOTS = [
@@ -46,7 +57,7 @@ const BookAppointment: React.FC<BookAppointmentProps> = ({
   const [reason, setReason] = useState('');
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
-  const [doctorSchedule, setDoctorSchedule] = useState<DoctorSchedule | null>(null);
+  const [doctorSchedule, setDoctorSchedule] = useState<DoctorScheduleType | null>(null);
   const [bookedSlots, setBookedSlots] = useState<{ [key: string]: string[] }>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -113,11 +124,14 @@ const BookAppointment: React.FC<BookAppointmentProps> = ({
       try {
         setLoading(true);
 
+        // Fetch doctor schedule
         const scheduleRes = await fetch(`/api/doctor-schedule?doctorId=${doctorId}`);
         if (!scheduleRes.ok) throw new Error('Failed to fetch doctor schedule');
-        const scheduleData = await scheduleRes.json();
+        const scheduleData: DoctorScheduleResponse = await scheduleRes.json();
+        // Set the doctorSchedule to the inner schedule object from the response
         setDoctorSchedule(scheduleData.schedule);
 
+        // Fetch appointments
         const appointmentsRes = await fetch(`/api/appointments?doctorId=${doctorId}`);
         if (!appointmentsRes.ok) throw new Error('Failed to fetch appointments');
         const appointmentsData = await appointmentsRes.json();
@@ -132,6 +146,7 @@ const BookAppointment: React.FC<BookAppointmentProps> = ({
 
         if (scheduleData.schedule) {
           const today = new Date();
+          // Access the nested schedule array correctly
           const availableDays = scheduleData.schedule.schedule.map((s: any) => s.day);
           const unavailableDatesSet = new Set(scheduleData.schedule.unavailableDates);
 
@@ -161,6 +176,7 @@ const BookAppointment: React.FC<BookAppointmentProps> = ({
   useEffect(() => {
     if (selectedDate && doctorSchedule) {
       const dayName = getDayName(selectedDate);
+      // Access the nested schedule array to find the day schedule
       const daySchedule = doctorSchedule.schedule.find(s => s.day === dayName);
 
       if (daySchedule) {
