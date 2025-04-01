@@ -290,13 +290,13 @@ const ChatBot: React.FC = () => {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message here..."
-                className={`flex-1 p-4 ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-200'} border rounded-l-xl focus:outline-none focus:border-blue-500 transition-colors`}
+                className={`flex-1 p-4 ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-200'} border rounded-l-xl w-[90%] focus:outline-none focus:border-blue-500 transition-colors`}
                 disabled={loading}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={loading}
-                className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white px-6 py-4 rounded-r-xl transition-colors flex items-center justify-center min-w-[100px]`}
+                className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white px-6 w-[10%] pt-4 sm:pb-4 py-5 rounded-r-xl transition-colors flex items-center justify-center min-w-[100px]`}
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
