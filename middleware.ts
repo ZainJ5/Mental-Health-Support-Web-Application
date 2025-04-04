@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("userEmail"); 
 
-  if (req.nextUrl.pathname === "/SignInPage" || req.nextUrl.pathname === "/SignUpPage") {
+  if (req.nextUrl.pathname === "/SignInPage" || req.nextUrl.pathname === "/SignUpPage" || req.nextUrl.pathname === "/doctor-login" || req.nextUrl.pathname === "/doctor-dashboard" ) {
     return NextResponse.next();
   }
 
