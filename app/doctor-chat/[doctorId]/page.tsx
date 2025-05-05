@@ -248,7 +248,6 @@ const DoctorChatRoom = () => {
 
   return (
     <div className={`min-h-screen flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-800'}`}>
-      {/* Header with Book Appointment button always visible */}
       <header className={`px-4 py-3 shadow-md flex justify-between items-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex items-center">
           <button
@@ -295,7 +294,6 @@ const DoctorChatRoom = () => {
               Send a message to begin your private conversation with {doctor?.name}.
               All communications are confidential.
             </p>
-            {/* Optional: You may remove this duplicate button if you prefer the header-only approach */}
             <button
               onClick={() => setShowBookingModal(true)}
               className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { toast, Toaster } from 'sonner';
+import Link from 'next/link';
 
 interface MoodData {
   stress: number;
@@ -305,6 +306,13 @@ const MoodTracking = () => {
             'Log Mood'
           )}
         </button>
+        
+        {/* Added Meditative Chatbot Button */}
+        <Link href="/meditative-chatbot" className="block mt-4">
+          <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded transition duration-200">
+            Go to Meditative Chatbot
+          </button>
+        </Link>
       </div>
 
       {popupVisible && (

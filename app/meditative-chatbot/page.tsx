@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Loader2 } from 'lucide-react';
 import Cookies from 'js-cookie';
+import Link from 'next/link';
 
 const parseAIMessage = (text: string): React.ReactNode[] => {
   const lines = text.split('\n');
@@ -228,6 +229,14 @@ const ChatBot: React.FC = () => {
             <MessageCircle className="w-6 h-6 text-white" />
           </div>
           <h1 className={`text-xl font-semibold ml-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Mental Health Support</h1>
+          
+          <div className="ml-auto">
+            <Link href="/doctor-chat">
+              <button className={`${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white px-4 py-2 rounded-lg transition-colors`}>
+                Talk to a Doctor
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
 
